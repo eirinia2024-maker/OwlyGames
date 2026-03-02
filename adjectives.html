@@ -1,0 +1,1733 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Fantasy Forest Tic Tac Toe</title>
+
+  <!-- Google Font allowed -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg0:#06110c;
+      --bg1:#0a1a12;
+      --panel: rgba(10, 22, 16, 0.68);
+      --panel2: rgba(12, 26, 19, 0.78);
+      --border: rgba(207, 255, 229, 0.16);
+      --border2: rgba(255, 223, 166, 0.16);
+
+      --text: rgba(238, 252, 245, 0.92);
+      --muted: rgba(238, 252, 245, 0.70);
+
+      --emerald: #2ee7a8;
+      --emerald2:#12c98f;
+      --amber: #ffbf4a;
+      --amber2:#f39b2f;
+
+      --danger:#ff6b7a;
+
+      --shadow: 0 14px 40px rgba(0,0,0,0.45);
+      --shadow2: 0 8px 20px rgba(0,0,0,0.35);
+
+      --radius: 18px;
+      --radius2: 14px;
+
+      --cell-bg: rgba(8, 18, 13, 0.55);
+      --cell-bg2: rgba(18, 34, 26, 0.65);
+
+      --focus: 0 0 0 3px rgba(46, 231, 168, 0.35), 0 0 0 1px rgba(46,231,168,0.7) inset;
+
+      /* layout */
+      --maxw: 980px;
+      --gap: clamp(12px, 2.2vmin, 18px);
+
+      /* typography */
+      --h: clamp(16px, 1.9vmin, 18px);
+      --b: clamp(14px, 1.7vmin, 16px);
+      --s: clamp(12px, 1.5vmin, 14px);
+
+      /* board size */
+      --board: min(78vmin, 520px);
+      --grid-gap: clamp(10px, 2vmin, 16px);
+    }
+
+    /* Theme variants */
+    [data-theme="sunlit"]{
+      --bg0:#07130e;
+      --bg1:#0a1f14;
+      --panel: rgba(10, 26, 18, 0.62);
+      --panel2: rgba(13, 32, 22, 0.76);
+      --emerald:#35efb5;
+      --amber:#ffc55d;
+      --cell-bg: rgba(10, 20, 15, 0.55);
+      --cell-bg2: rgba(20, 40, 30, 0.62);
+    }
+    [data-theme="moonlit"]{
+      --bg0:#040a12;
+      --bg1:#071427;
+      --panel: rgba(7, 15, 30, 0.58);
+      --panel2: rgba(10, 18, 40, 0.74);
+      --emerald:#33eec7;
+      --amber:#aebdff;
+      --amber2:#8ea2ff;
+      --cell-bg: rgba(7, 12, 24, 0.55);
+      --cell-bg2: rgba(14, 22, 44, 0.62);
+      --border2: rgba(174, 189, 255, 0.16);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(46,231,168,0.10), transparent 60%),
+                  radial-gradient(900px 600px at 80% 30%, rgba(255,191,74,0.08), transparent 55%),
+                  linear-gradient(160deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* Enchanted woodland backdrop (no external images): leaf/moss texture via layered gradients */
+    body::before{
+      content:"";
+      position:fixed; inset:-40px;
+      background:
+        radial-gradient(900px 700px at 60% 120%, rgba(0,0,0,0.50), transparent 60%),
+        radial-gradient(1200px 900px at 20% 120%, rgba(0,0,0,0.42), transparent 60%),
+        radial-gradient(circle at 20% 30%, rgba(46,231,168,0.06), transparent 45%),
+        radial-gradient(circle at 80% 40%, rgba(255,191,74,0.05), transparent 50%),
+        /* moss speckle */
+        radial-gradient(2px 2px at 10% 20%, rgba(255,255,255,0.06), transparent 60%),
+        radial-gradient(2px 2px at 40% 60%, rgba(255,255,255,0.05), transparent 60%),
+        radial-gradient(2px 2px at 70% 30%, rgba(255,255,255,0.04), transparent 60%),
+        radial-gradient(2px 2px at 80% 80%, rgba(255,255,255,0.04), transparent 60%),
+        radial-gradient(2px 2px at 20% 85%, rgba(255,255,255,0.05), transparent 60%),
+        /* leaf veins */
+        repeating-linear-gradient(135deg,
+          rgba(255,255,255,0.03) 0px,
+          rgba(255,255,255,0.03) 1px,
+          transparent 1px,
+          transparent 12px),
+        repeating-linear-gradient(45deg,
+          rgba(255,255,255,0.02) 0px,
+          rgba(255,255,255,0.02) 1px,
+          transparent 1px,
+          transparent 16px);
+      opacity:0.95;
+      filter: blur(0.2px);
+      pointer-events:none;
+      transform: translateZ(0);
+    }
+
+    /* Subtle firefly glow layer */
+    .fireflies{
+      position:fixed; inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:0;
+      opacity:0.85;
+    }
+    .fireflies::before{
+      content:"";
+      position:absolute; inset:-20%;
+      background:
+        radial-gradient(8px 8px at 15% 20%, rgba(46,231,168,0.25), transparent 60%),
+        radial-gradient(10px 10px at 35% 60%, rgba(255,191,74,0.22), transparent 60%),
+        radial-gradient(7px 7px at 60% 35%, rgba(46,231,168,0.18), transparent 60%),
+        radial-gradient(9px 9px at 80% 70%, rgba(255,191,74,0.16), transparent 60%),
+        radial-gradient(6px 6px at 75% 25%, rgba(46,231,168,0.14), transparent 60%),
+        radial-gradient(8px 8px at 25% 85%, rgba(255,191,74,0.14), transparent 60%);
+      filter: blur(0.2px);
+      animation: drift 18s linear infinite;
+      transform: translate3d(0,0,0);
+    }
+    @keyframes drift{
+      0%{transform: translate3d(0,0,0) scale(1)}
+      50%{transform: translate3d(-2%, 2%,0) scale(1.02)}
+      100%{transform: translate3d(0,0,0) scale(1)}
+    }
+
+    .app{
+      position:relative;
+      min-height:100vh;
+      display:flex;
+      align-items:stretch;
+      justify-content:center;
+      padding: clamp(14px, 3.2vmin, 28px);
+      z-index:1;
+    }
+    .wrap{
+      width: min(var(--maxw), 100%);
+      display:flex;
+      flex-direction:column;
+      gap: var(--gap);
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: var(--gap);
+      padding: clamp(10px, 2.3vmin, 14px);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      min-width: 180px;
+    }
+    .brand .title{
+      font-family: Cinzel, serif;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      font-size: clamp(16px, 2.4vmin, 20px);
+      line-height:1.1;
+      display:flex; align-items:center; gap:10px;
+      white-space:nowrap;
+    }
+    .rune-dot{
+      width: 10px; height: 10px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0.0) 60%),
+                  radial-gradient(circle at 40% 40%, rgba(46,231,168,0.95), rgba(46,231,168,0.08) 70%);
+      box-shadow: 0 0 18px rgba(46,231,168,0.35);
+      flex: 0 0 auto;
+    }
+    .brand .subtitle{
+      font-size: var(--s);
+      color: var(--muted);
+      letter-spacing: 0.01em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 42ch;
+    }
+
+    .actions{
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    button{
+      appearance:none;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      color: var(--text);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-size: var(--b);
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor:pointer;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+      user-select:none;
+    }
+    button:hover{
+      transform: translateY(-1px);
+      border-color: rgba(46,231,168,0.35);
+      box-shadow: 0 14px 30px rgba(0,0,0,0.32);
+    }
+    button:active{
+      transform: translateY(0px) scale(0.99);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.26);
+    }
+    button:focus-visible{ outline:none; box-shadow: var(--focus), 0 14px 30px rgba(0,0,0,0.35); }
+    .btn-emerald{
+      border-color: rgba(46,231,168,0.25);
+      background: linear-gradient(180deg, rgba(46,231,168,0.18), rgba(46,231,168,0.06));
+    }
+    .btn-amber{
+      border-color: rgba(255,191,74,0.22);
+      background: linear-gradient(180deg, rgba(255,191,74,0.16), rgba(255,191,74,0.05));
+    }
+
+    main{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: var(--gap);
+    }
+
+    .statusRow{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      padding: clamp(10px, 2.2vmin, 14px);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* Runic ornamentation on panel edge */
+    .statusRow::before{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(600px 160px at 50% 0%, rgba(46,231,168,0.08), transparent 60%),
+        radial-gradient(500px 140px at 50% 100%, rgba(255,191,74,0.06), transparent 60%),
+        repeating-linear-gradient(90deg,
+          rgba(255,255,255,0.06) 0px,
+          rgba(255,255,255,0.06) 1px,
+          transparent 1px,
+          transparent 14px);
+      mask: linear-gradient(90deg, transparent, rgba(0,0,0,0.9) 20%, rgba(0,0,0,0.9) 80%, transparent);
+      opacity:0.35;
+      pointer-events:none;
+    }
+
+    .statusTop{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      position:relative;
+      z-index:1;
+      flex-wrap:wrap;
+    }
+
+    .score{
+      display:flex;
+      gap: 10px;
+      align-items:stretch;
+      flex-wrap:wrap;
+    }
+    .chip{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      min-width: 96px;
+    }
+    .chip .k{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .chip .v{
+      font-size: clamp(16px, 2.1vmin, 18px);
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      display:flex;
+      align-items:baseline;
+      gap: 8px;
+    }
+    .chip .v span{
+      font-family: Cinzel, serif;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      opacity:0.95;
+    }
+    .chip.em{ border-color: rgba(46,231,168,0.20); }
+    .chip.am{ border-color: rgba(255,191,74,0.18); }
+    .chip.dr{ border-color: rgba(255,255,255,0.14); }
+
+    .live{
+      font-size: var(--b);
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .live .orb{
+      width: 10px; height:10px; border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.85), rgba(255,255,255,0.0) 60%),
+                  radial-gradient(circle at 50% 50%, rgba(46,231,168,0.9), rgba(46,231,168,0.1) 72%);
+      box-shadow: 0 0 18px rgba(46,231,168,0.35);
+    }
+
+    /* Victory banner: under header (in statusRow), never overlaps */
+    .banner{
+      position:relative;
+      z-index:1;
+      display:none;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border2);
+      background: linear-gradient(180deg, rgba(255,191,74,0.15), rgba(46,231,168,0.08));
+      box-shadow: 0 12px 26px rgba(0,0,0,0.28);
+      font-size: var(--b);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .banner.show{ display:block; }
+    .banner strong{
+      font-family: Cinzel, serif;
+      letter-spacing: 0.06em;
+    }
+
+    .boardCard{
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      background: var(--panel2);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      padding: clamp(12px, 2.6vmin, 16px);
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* hint of ancient tree ruins / fairy circle vibe */
+    .boardCard::before{
+      content:"";
+      position:absolute; inset:-40%;
+      background:
+        radial-gradient(closest-side at 50% 50%, rgba(46,231,168,0.10), transparent 70%),
+        radial-gradient(closest-side at 50% 50%, rgba(255,191,74,0.08), transparent 78%),
+        conic-gradient(from 0deg, rgba(255,255,255,0.06), transparent 25%, rgba(255,255,255,0.04), transparent 50%, rgba(255,255,255,0.06));
+      opacity:0.35;
+      filter: blur(1px);
+      pointer-events:none;
+      transform: rotate(8deg);
+      mask: radial-gradient(circle at 50% 52%, rgba(0,0,0,0.9) 0 40%, transparent 65%);
+    }
+
+    .boardWrap{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      z-index:1;
+      width:100%;
+    }
+
+    .board{
+      width: var(--board);
+      height: var(--board);
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: var(--grid-gap);
+      padding: var(--grid-gap);
+      border-radius: calc(var(--radius) + 10px);
+      background:
+        radial-gradient(200px 140px at 50% 10%, rgba(46,231,168,0.12), transparent 60%),
+        radial-gradient(220px 160px at 50% 110%, rgba(255,191,74,0.10), transparent 55%),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3), 0 18px 42px rgba(0,0,0,0.45);
+      position:relative;
+    }
+
+    .cell{
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: var(--radius2);
+      background: linear-gradient(180deg, var(--cell-bg2), var(--cell-bg));
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      user-select:none;
+      touch-action: manipulation;
+      cursor:pointer;
+      transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease, background .12s ease;
+      outline:none;
+    }
+    .cell:hover{
+      transform: translateY(-1px);
+      border-color: rgba(46,231,168,0.30);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35), 0 14px 28px rgba(0,0,0,0.35);
+    }
+    .cell:active{
+      transform: translateY(0) scale(0.99);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35), 0 10px 20px rgba(0,0,0,0.30);
+    }
+    .cell:focus-visible{ box-shadow: var(--focus), inset 0 0 0 1px rgba(0,0,0,0.35); }
+
+    .mark{
+      font-family: Cinzel, serif;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      font-size: clamp(34px, 10vmin, 78px);
+      line-height: 1;
+      text-shadow: 0 8px 22px rgba(0,0,0,0.35);
+      transform: translateZ(0);
+    }
+
+    .mark.x{
+      color: var(--emerald);
+      text-shadow: 0 0 18px rgba(46,231,168,0.25), 0 8px 22px rgba(0,0,0,0.35);
+    }
+    .mark.o{
+      color: var(--amber);
+      text-shadow: 0 0 18px rgba(255,191,74,0.22), 0 8px 22px rgba(0,0,0,0.35);
+    }
+
+    .cell[aria-disabled="true"]{
+      cursor: default;
+      opacity: 0.98;
+    }
+
+    .cell.win{
+      border-color: rgba(46,231,168,0.48);
+      box-shadow: inset 0 0 0 1px rgba(46,231,168,0.30), 0 16px 28px rgba(0,0,0,0.35);
+      background:
+        radial-gradient(140px 100px at 50% 30%, rgba(46,231,168,0.20), transparent 65%),
+        radial-gradient(140px 110px at 50% 90%, rgba(255,191,74,0.12), transparent 66%),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+    }
+    .cell.dim{
+      opacity: 0.55;
+      filter: saturate(0.85);
+    }
+
+    .hintRow{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      position:relative;
+      z-index:1;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+    }
+    .pill .mini{
+      width:8px; height:8px; border-radius:999px;
+      background: rgba(255,255,255,0.25);
+      box-shadow: 0 0 10px rgba(255,255,255,0.10);
+    }
+
+    /* Confetti canvas sits above board, below dialogs; not DOM-spraying */
+    #magicCanvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:3;
+    }
+
+    /* Dialog */
+    dialog{
+      border:none;
+      padding:0;
+      border-radius: 20px;
+      width: min(680px, calc(100vw - 24px));
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+      box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+      overflow:hidden;
+    }
+    dialog::backdrop{
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+    }
+    .dlgHead{
+      padding: 16px 16px 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      background:
+        radial-gradient(500px 180px at 50% 0%, rgba(46,231,168,0.16), transparent 60%),
+        radial-gradient(500px 180px at 50% 100%, rgba(255,191,74,0.10), transparent 70%);
+    }
+    .dlgTitle{
+      font-family: Cinzel, serif;
+      letter-spacing: 0.06em;
+      font-weight: 800;
+      font-size: 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin:0;
+    }
+    .dlgBody{
+      padding: 14px 16px 16px 16px;
+      background: rgba(0,0,0,0.22);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap: 6px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+    }
+    .field label{
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    select, input[type="radio"]{
+      font: inherit;
+    }
+    select{
+      width:100%;
+      padding: 10px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.18);
+      color: var(--text);
+      outline:none;
+    }
+    select:focus-visible{ box-shadow: var(--focus); }
+    .radios{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      margin-top: 2px;
+    }
+    .radio{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.02);
+      cursor:pointer;
+      user-select:none;
+    }
+    .radio:has(input:focus-visible){ box-shadow: var(--focus); }
+    .radio input{ accent-color: var(--emerald); }
+    .dlgActions{
+      display:flex;
+      justify-content:flex-end;
+      gap: 10px;
+      padding: 12px 16px 16px 16px;
+      background: rgba(0,0,0,0.22);
+      border-top: 1px solid rgba(255,255,255,0.10);
+    }
+    .btn-ghost{
+      border-color: rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.02);
+    }
+
+    /* Quiz-specific */
+    .quizWrap{ display:flex; flex-direction:column; gap:12px; }
+    .quizQ{
+      font-family: Cinzel, serif;
+      letter-spacing: 0.02em;
+      font-weight: 800;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+    .quizAnswers{ display:grid; grid-template-columns: 1fr; gap:10px; }
+    .quizBtn{
+      width:100%;
+      border-radius: 16px;
+      padding: 12px 14px;
+      text-align:left;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+    }
+    .quizBtn:hover{ border-color: rgba(255,191,74,0.20); }
+    .quizFeedback{
+      min-height: 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .quizFeedback.ok{ color: rgba(46,231,168,0.95); }
+    .quizFeedback.bad{ color: rgba(255,107,122,0.95); }
+
+    /* Responsive */
+    @media (max-width: 520px){
+      header{ flex-direction:column; align-items:stretch; }
+      .brand{ min-width: unset; }
+      .actions{ justify-content:stretch; }
+      .actions button{ flex: 1 1 auto; }
+      .grid{ grid-template-columns: 1fr; }
+      .chip{ min-width: 90px; flex: 1 1 0; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+      .fireflies{ display:none; }
+    }
+
+    .sr-only{
+      position:absolute;
+      width:1px;height:1px;
+      padding:0;margin:-1px;
+      overflow:hidden;
+      clip:rect(0,0,0,0);
+      white-space:nowrap;
+      border:0;
+    }
+  </style>
+</head>
+
+<body data-theme="sunlit">
+  <div class="fireflies" aria-hidden="true"></div>
+
+  <div class="app">
+    <div class="wrap">
+      <header>
+        <div class="brand">
+          <div class="title">
+            <span class="rune-dot" aria-hidden="true"></span>
+            Forest Tic Tac Toe
+          </div>
+          <div class="subtitle" id="subTitle">Sunlit Grove • Standard glyphs • 2-player</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn-emerald" id="newRoundBtn" type="button">New Round</button>
+          <button class="btn-amber" id="customizeBtn" type="button" aria-haspopup="dialog">Customize</button>
+          <button id="resetScoresBtn" type="button">Reset Scores</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="statusRow" aria-label="Game status and scoreboard">
+          <div class="statusTop">
+            <div class="live" aria-live="polite" aria-atomic="true" id="liveLine">
+              <span class="orb" aria-hidden="true"></span>
+              <span id="statusText">Your move: X</span>
+            </div>
+
+            <div class="score" aria-label="Scoreboard">
+              <div class="chip em" aria-label="Score for X">
+                <div class="k">X</div>
+                <div class="v"><span id="scoreX">0</span> <span id="glyphXMini" aria-hidden="true">X</span></div>
+              </div>
+              <div class="chip am" aria-label="Score for O">
+                <div class="k">O</div>
+                <div class="v"><span id="scoreO">0</span> <span id="glyphOMini" aria-hidden="true">O</span></div>
+              </div>
+              <div class="chip dr" aria-label="Draws">
+                <div class="k">Draws</div>
+                <div class="v"><span id="scoreD">0</span> <span aria-hidden="true">≋</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="banner" id="banner" role="status" aria-live="polite"></div>
+          <div class="sr-only" id="srStatus" aria-live="polite" aria-atomic="true"></div>
+        </section>
+
+        <section class="boardCard" aria-label="Tic Tac Toe board">
+          <canvas id="magicCanvas" aria-hidden="true"></canvas>
+
+          <div class="boardWrap">
+            <div class="board" id="board"
+                 role="grid"
+                 aria-label="Tic Tac Toe grid"
+                 aria-describedby="boardHelp">
+              <!-- cells injected by JS -->
+            </div>
+          </div>
+
+          <div class="hintRow" id="boardHelp">
+            <div class="pill"><span class="mini" aria-hidden="true"></span>Keyboard: Arrow keys • Enter/Space to place</div>
+            <div class="pill"><span class="mini" aria-hidden="true"></span><span id="modeHint">Mode: 2-player</span></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Customize Dialog -->
+  <dialog id="customizeDialog" aria-labelledby="dlgTitle">
+    <div class="dlgHead">
+      <h2 class="dlgTitle" id="dlgTitle">
+        Customize
+        <button class="btn-ghost" id="closeDlgBtn" type="button" aria-label="Close">✕</button>
+      </h2>
+    </div>
+
+    <form method="dialog" id="customizeForm">
+      <div class="dlgBody">
+        <div class="grid">
+          <div class="field">
+            <label for="themeSel">Theme</label>
+            <select id="themeSel" name="theme">
+              <option value="sunlit">Sunlit Grove</option>
+              <option value="moonlit">Moonlit Glade</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="glyphSel">Glyphs</label>
+            <select id="glyphSel" name="glyphs">
+              <option value="standard">Standard X / O</option>
+              <option value="runesLeaves">Runes / Leaves</option>
+              <option value="wandAcorn">Wand / Acorn</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="modeSel">Mode</label>
+            <select id="modeSel" name="mode">
+              <option value="pvp">2-player</option>
+              <option value="ai">vs AI</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="firstSel">First move</label>
+            <select id="firstSel" name="first">
+              <option value="X">X</option>
+              <option value="O">O</option>
+            </select>
+          </div>
+
+          <div class="field" style="grid-column: 1 / -1;">
+            <label>AI temperament</label>
+            <div class="radios" role="radiogroup" aria-label="AI temperament">
+              <label class="radio"><input type="radio" name="ai" value="oracle" checked> Oracle (perfect)</label>
+              <label class="radio"><input type="radio" name="ai" value="ranger"> Ranger (near-perfect)</label>
+              <label class="radio"><input type="radio" name="ai" value="trickster"> Trickster (playful)</label>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--muted);line-height:1.35">
+              Temperament tweaks perfect-play minimax by adding “forest whims” (handicaps) — still strong, but more human.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dlgActions">
+        <button class="btn-ghost" value="cancel" type="button" id="cancelBtn">Cancel</button>
+        <button class="btn-emerald" value="apply" type="submit" id="applyBtn">Apply</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Quiz Dialog -->
+  <dialog id="quizDialog" aria-labelledby="quizTitle">
+    <div class="dlgHead">
+      <h2 class="dlgTitle" id="quizTitle">
+        Forest Quiz
+        <button class="btn-ghost" id="closeQuizBtn" type="button" aria-label="Close">✕</button>
+      </h2>
+    </div>
+
+    <div class="dlgBody">
+      <div class="quizWrap">
+        <div class="quizQ" id="quizQuestion">Question</div>
+        <div class="quizAnswers" id="quizAnswers"></div>
+        <div class="quizFeedback" id="quizFeedback" role="status" aria-live="polite"></div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.35">
+          Answer correctly to place your mark. Questions don’t repeat.
+        </div>
+      </div>
+    </div>
+
+    <div class="dlgActions">
+      <button class="btn-ghost" type="button" id="quizCloseBtn">Close</button>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      "use strict";
+
+      // ---------- State ----------
+      const state = {
+        board: Array(9).fill(null), // 'X' | 'O' | null
+        turn: 'X',
+        gameOver: false,
+        scores: { X: 0, O: 0, D: 0 },
+
+        settings: {
+          theme: 'sunlit',      // sunlit | moonlit
+          glyphs: 'standard',   // standard | runesLeaves | wandAcorn
+          mode: 'pvp',          // pvp | ai
+          first: 'X',           // X | O
+          ai: 'oracle'          // oracle | ranger | trickster
+        },
+
+        focusIndex: 0,
+
+        // For AI: which symbol human uses (in vs AI)
+        human: 'X',
+        aiSym: 'O'
+      };
+
+      // ---------- Glyph sets ----------
+      const glyphSets = {
+        standard: { X: "X", O: "O", miniX: "X", miniO: "O", label: "Standard glyphs" },
+        runesLeaves: {
+          X: "ᛟ", O: "❧",  // fantasy rune + leaf
+          miniX: "ᛟ", miniO: "❧",
+          label: "Runes / Leaves"
+        },
+        wandAcorn: {
+          X: "✦", O: "❍",
+          miniX: "✦", miniO: "❍",
+          label: "Wand / Acorn"
+        }
+      };
+
+      // ---------- Quiz pool ----------
+      // Messages (change here if you want "Gorrect!" exactly)
+      const MSG_CORRECT = "Correct!";
+      const MSG_TRY_AGAIN = "Let's try again";
+
+      // Format per line: question, a1, a2, a3, correctIndex(1-3)
+      const QUIZ_RAW = `A cat is ____ than a mouse.,smaller,smallest,more small,1
+This puzzle is ____ than that one.,easier,easiest,more easy,1
+Mount Everest is the ____ mountain in the world.,higher,highest,most high,2
+My bag is ____ than your bag.,heavier,heavyest,more heavy,1
+This story is the ____ in the book.,funny,funnier,funniest,3
+A blue whale is ____ than a dolphin.,bigger,biggest,more big,1
+Today is the ____ day of the week for me.,best,goodest,better,1
+This test is ____ than the last test.,harder,hardest,more hard,1
+Winter is the ____ season in my country.,coldest,colder,more cold,1
+My brother is ____ than me.,taller,tallest,more tall,1
+Which is correct? “Tom is ____ than Ben.”,more friendly,friendlier,friendliest,2
+This is the ____ toy in the shop.,cheapest,cheaper,more cheap,1
+A snail is ____ than a rabbit.,slower,slowest,more slow,1
+Which is correct? “This cake is the ____.”,most delicious,deliciouser,deliciousest,1
+My room is ____ than your room.,cleaner,cleanest,more clean,1
+Which is correct? “June is ____ than May.”,hotter,more hot,hotest,1
+This is the ____ picture on the wall.,prettiest,prettier,most pretty,1
+An elephant is the ____ animal in this zoo.,largest,larger,more large,1
+Which is correct? “This game is ____.”,more interesting,interestinger,interestest,1
+My dad drives ____ than my mom.,faster,fastest,more fast,1
+Which is correct? “Anna is the ____ student in class.”,smartest,smarter,more smart,1
+This street is ____ than that street.,narrower,narrowest,more narrow,1
+Which is correct? “It is the ____ day of my life.”,happiest,happier,more happy,1
+A giraffe’s neck is ____ than a horse’s neck.,longer,longest,more long,1
+Which is correct? “This box is ____ than that box.”,bigger,biger,more big,1
+Which is correct? “Mike is the ____ runner.”,fastest,faster,most fast,1
+This problem is the ____ one on the page.,easiest,easier,most easy,1
+Which is correct? “My shoes are ____ than yours.”,dirtier,dirtyest,more dirty,1
+Which is correct? “This is the ____ room in the house.”,most beautiful,beautifuller,beautifulest,1
+Which is correct? “I feel ____ today than yesterday.”,better,gooder,best,1`;
+
+      function parseQuiz(raw){
+        return raw
+          .split(/\n+/)
+          .map(l => l.trim())
+          .filter(Boolean)
+          .map(line => {
+            const parts = line.split(",").map(p => p.trim());
+            if(parts.length !== 5) return null;
+            const [q,a1,a2,a3,ci] = parts;
+            const correct = Number(ci);
+            if(!q || !a1 || !a2 || !a3 || !(correct>=1 && correct<=3)) return null;
+            return { q, answers:[a1,a2,a3], correct };
+          })
+          .filter(Boolean);
+      }
+
+      function shuffle(arr){
+        for(let i=arr.length-1;i>0;i--){
+          const j = Math.floor(Math.random()*(i+1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+
+      const quizAll = parseQuiz(QUIZ_RAW);
+      let quizRemaining = shuffle(quizAll.slice()); // consumed forever (no repeats)
+
+      function takeQuestion(){
+        return quizRemaining.pop() || null;
+      }
+
+      // Gate state: move is blocked until correct
+      const quizGate = {
+        active: false,
+        pendingIndex: null,
+        pendingSymbol: null,
+        currentQ: null
+      };
+
+      // ---------- DOM ----------
+      const $ = (sel) => document.querySelector(sel);
+
+      const boardEl = $("#board");
+      const statusText = $("#statusText");
+      const srStatus = $("#srStatus");
+      const banner = $("#banner");
+
+      const scoreX = $("#scoreX");
+      const scoreO = $("#scoreO");
+      const scoreD = $("#scoreD");
+
+      const glyphXMini = $("#glyphXMini");
+      const glyphOMini = $("#glyphOMini");
+      const subTitle = $("#subTitle");
+      const modeHint = $("#modeHint");
+
+      const newRoundBtn = $("#newRoundBtn");
+      const customizeBtn = $("#customizeBtn");
+      const resetScoresBtn = $("#resetScoresBtn");
+
+      const dlg = $("#customizeDialog");
+      const closeDlgBtn = $("#closeDlgBtn");
+      const cancelBtn = $("#cancelBtn");
+      const customizeForm = $("#customizeForm");
+
+      const themeSel = $("#themeSel");
+      const glyphSel = $("#glyphSel");
+      const modeSel = $("#modeSel");
+      const firstSel = $("#firstSel");
+
+      // Quiz DOM
+      const quizDlg = $("#quizDialog");
+      const closeQuizBtn = $("#closeQuizBtn");
+      const quizCloseBtn = $("#quizCloseBtn");
+      const quizQuestionEl = $("#quizQuestion");
+      const quizAnswersEl = $("#quizAnswers");
+      const quizFeedbackEl = $("#quizFeedback");
+
+      const magicCanvas = $("#magicCanvas");
+      const ctx = magicCanvas.getContext("2d", { alpha: true });
+
+      // ---------- Utilities ----------
+      const prefersReducedMotion = () =>
+        window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      const lines = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+
+      function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+      function setLive(text){
+        statusText.textContent = text;
+        srStatus.textContent = text;
+      }
+
+      function setBanner(html, show=true){
+        banner.innerHTML = html;
+        banner.classList.toggle("show", !!show);
+      }
+
+      function clearBanner(){
+        setBanner("", false);
+      }
+
+      function currentGlyph(sym){
+        const g = glyphSets[state.settings.glyphs];
+        return sym === "X" ? g.X : g.O;
+      }
+
+      function renderSubtitle(){
+        const t = state.settings.theme === "sunlit" ? "Sunlit Grove" : "Moonlit Glade";
+        const g = glyphSets[state.settings.glyphs].label;
+        const m = state.settings.mode === "pvp" ? "2-player" : "vs AI";
+        subTitle.textContent = `${t} • ${g} • ${m}`;
+        modeHint.textContent = `Mode: ${m}${state.settings.mode === "ai" ? ` (${state.settings.ai})` : ""}`;
+      }
+
+      function updateScoresUI(){
+        scoreX.textContent = String(state.scores.X);
+        scoreO.textContent = String(state.scores.O);
+        scoreD.textContent = String(state.scores.D);
+
+        const g = glyphSets[state.settings.glyphs];
+        glyphXMini.textContent = g.miniX;
+        glyphOMini.textContent = g.miniO;
+      }
+
+      function cellLabel(i){
+        const r = Math.floor(i/3)+1;
+        const c = (i%3)+1;
+        return `Row ${r}, Column ${c}`;
+      }
+
+      // ---------- Board Rendering ----------
+      function buildBoard(){
+        boardEl.innerHTML = "";
+        for(let i=0;i<9;i++){
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "cell";
+          btn.setAttribute("role", "gridcell");
+          btn.setAttribute("data-i", String(i));
+          btn.setAttribute("aria-label", `${cellLabel(i)} empty`);
+          btn.setAttribute("aria-disabled", "false");
+          btn.tabIndex = (i === state.focusIndex) ? 0 : -1;
+
+          btn.addEventListener("click", () => handleMove(i));
+          btn.addEventListener("keydown", (e) => handleCellKeydown(e, i));
+
+          boardEl.appendChild(btn);
+        }
+        renderBoard();
+      }
+
+      function renderBoard(){
+        const cells = boardEl.querySelectorAll(".cell");
+        const winnerInfo = getWinner(state.board);
+
+        cells.forEach((cell, i) => {
+          const v = state.board[i];
+          cell.innerHTML = "";
+
+          cell.classList.remove("win", "dim");
+          cell.setAttribute("aria-disabled", String(state.gameOver || v !== null || quizGate.active));
+          cell.disabled = !!(state.gameOver || v !== null || quizGate.active);
+
+          if(v){
+            const span = document.createElement("span");
+            span.className = `mark ${v.toLowerCase()}`;
+            span.textContent = currentGlyph(v);
+            span.setAttribute("aria-hidden", "true");
+            cell.appendChild(span);
+            cell.setAttribute("aria-label", `${cellLabel(i)} ${v}`);
+          }else{
+            cell.setAttribute("aria-label", `${cellLabel(i)} empty`);
+          }
+        });
+
+        if(winnerInfo && winnerInfo.line){
+          const set = new Set(winnerInfo.line);
+          cells.forEach((cell, idx) => {
+            if(set.has(idx)) cell.classList.add("win");
+            else cell.classList.add("dim");
+          });
+        }
+
+        focusRoving();
+      }
+
+      function focusRoving(){
+        const cells = boardEl.querySelectorAll(".cell");
+        cells.forEach((c, idx) => c.tabIndex = (idx === state.focusIndex ? 0 : -1));
+      }
+
+      function focusCell(i){
+        state.focusIndex = i;
+        focusRoving();
+        const el = boardEl.querySelector(`.cell[data-i="${i}"]`);
+        if(el) el.focus({ preventScroll: true });
+      }
+
+      function nextIndex(i, key){
+        const r = Math.floor(i/3);
+        const c = i % 3;
+        if(key === "ArrowUp") return ((r + 2) % 3) * 3 + c;
+        if(key === "ArrowDown") return ((r + 1) % 3) * 3 + c;
+        if(key === "ArrowLeft") return r * 3 + ((c + 2) % 3);
+        if(key === "ArrowRight") return r * 3 + ((c + 1) % 3);
+        return i;
+      }
+
+      function handleCellKeydown(e, i){
+        const key = e.key;
+        if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(key)){
+          e.preventDefault();
+          focusCell(nextIndex(i, key));
+          return;
+        }
+        if(key === "Enter" || key === " "){
+          e.preventDefault();
+          handleMove(i);
+          return;
+        }
+      }
+
+      // ---------- Game Logic ----------
+      function getWinner(board){
+        for(const line of lines){
+          const [a,b,c] = line;
+          if(board[a] && board[a] === board[b] && board[a] === board[c]){
+            return { winner: board[a], line };
+          }
+        }
+        if(board.every(Boolean)) return { winner: "D", line: null };
+        return null;
+      }
+
+      function resetRound({keepTurn=false} = {}){
+        state.board = Array(9).fill(null);
+        state.gameOver = false;
+        clearBanner();
+
+        state.turn = keepTurn ? state.turn : state.settings.first;
+
+        if(state.settings.mode === "ai"){
+          state.human = state.settings.first;
+          state.aiSym = (state.human === "X") ? "O" : "X";
+        }
+
+        // clear quiz gate (does NOT restore questions; no repeats)
+        quizGate.active = false;
+        quizGate.pendingIndex = null;
+        quizGate.pendingSymbol = null;
+        quizGate.currentQ = null;
+        if(quizDlg.open) quizDlg.close();
+        quizFeedbackEl.textContent = "";
+        quizFeedbackEl.className = "quizFeedback";
+
+        renderBoard();
+        setLive(nextStatusLine());
+
+        if(state.settings.mode === "ai" && state.turn === state.aiSym){
+          queueAIMove();
+        }
+      }
+
+      function nextStatusLine(){
+        if(state.gameOver){
+          return "Round over.";
+        }
+        if(state.settings.mode === "ai"){
+          const who = (state.turn === state.human) ? "Your move" : "Forest's move";
+          return `${who}: ${state.turn}`;
+        }
+        return `Your move: ${state.turn}`;
+      }
+
+      // Core commit (no quiz inside)
+      function commitMove(i){
+        placeMark(i, state.turn);
+
+        const result = getWinner(state.board);
+        if(result){
+          endRound(result);
+          return;
+        }
+
+        state.turn = (state.turn === "X") ? "O" : "X";
+        setLive(nextStatusLine());
+
+        if(state.settings.mode === "ai" && state.turn === state.aiSym){
+          queueAIMove();
+        }
+      }
+
+      // Wrapper: quiz gating before human move(s)
+      function handleMove(i){
+        if(state.gameOver) return;
+
+        // vs AI: only human can click on their turn
+        if(state.settings.mode === "ai" && state.turn !== state.human) return;
+
+        if(state.board[i] !== null) return;
+
+        // If a quiz is already active, ignore board actions
+        if(quizGate.active) return;
+
+        // Start quiz gate (if questions remain)
+        startQuizGate(i, state.turn);
+      }
+
+      function placeMark(i, sym){
+        state.board[i] = sym;
+        state.focusIndex = i;
+        renderBoard();
+      }
+
+      function endRound(result){
+        state.gameOver = true;
+
+        if(result.winner === "D"){
+          state.scores.D += 1;
+          updateScoresUI();
+          setBanner(`A calm hush… <strong>Draw</strong>. The grove waits for another round.`);
+          setLive("Draw. Press New Round to play again.");
+        }else{
+          state.scores[result.winner] += 1;
+          updateScoresUI();
+
+          const glyph = currentGlyph(result.winner);
+          const name = (result.winner === "X") ? "Emerald" : "Amber";
+          setBanner(`Forest magic surges — <strong>${name} ${glyph}</strong> wins!`);
+          setLive(`${result.winner} wins. Press New Round to play again.`);
+
+          if(!prefersReducedMotion()){
+            burstMagic();
+          }
+        }
+
+        renderBoard();
+      }
+
+      // ---------- Quiz Gate ----------
+      function openQuizDialog(){
+        if(typeof quizDlg.showModal === "function") quizDlg.showModal();
+        else quizDlg.setAttribute("open","");
+      }
+
+      function closeQuizDialog(){
+        if(quizDlg.open) quizDlg.close();
+        quizDlg.removeAttribute("open");
+      }
+
+      function renderQuizQuestion(qObj){
+        quizQuestionEl.textContent = qObj.q;
+
+        quizAnswersEl.innerHTML = "";
+        qObj.answers.forEach((ans, idx) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "quizBtn";
+          b.textContent = `${idx+1}) ${ans}`;
+          b.addEventListener("click", () => submitQuizAnswer(idx+1));
+          quizAnswersEl.appendChild(b);
+        });
+
+        quizFeedbackEl.textContent = "";
+        quizFeedbackEl.className = "quizFeedback";
+
+        // focus first answer for keyboard users
+        const firstBtn = quizAnswersEl.querySelector("button");
+        if(firstBtn) firstBtn.focus({preventScroll:true});
+      }
+
+      function startQuizGate(cellIndex, symbol){
+        // If no more questions, allow move immediately
+        const q = takeQuestion();
+        if(!q){
+          commitMove(cellIndex);
+          return;
+        }
+
+        quizGate.active = true;
+        quizGate.pendingIndex = cellIndex;
+        quizGate.pendingSymbol = symbol;
+        quizGate.currentQ = q;
+
+        renderBoard(); // disables board while quiz open
+        renderQuizQuestion(q);
+        openQuizDialog();
+      }
+
+      function submitQuizAnswer(choiceIndex){
+        if(!quizGate.active || !quizGate.currentQ) return;
+
+        const correct = (choiceIndex === quizGate.currentQ.correct);
+
+        if(correct){
+          quizFeedbackEl.textContent = MSG_CORRECT;
+          quizFeedbackEl.className = "quizFeedback ok";
+
+          // allow a tiny confirmation moment, then close and commit move
+          window.setTimeout(() => {
+            closeQuizDialog();
+            quizGate.active = false;
+            const idx = quizGate.pendingIndex;
+
+            quizGate.pendingIndex = null;
+            quizGate.pendingSymbol = null;
+            quizGate.currentQ = null;
+
+            renderBoard();
+            if(idx != null) commitMove(idx);
+          }, 420);
+
+        }else{
+          quizFeedbackEl.textContent = MSG_TRY_AGAIN;
+          quizFeedbackEl.className = "quizFeedback bad";
+
+          // immediately load a NEW question (no repeats)
+          window.setTimeout(() => {
+            const nextQ = takeQuestion();
+            if(!nextQ){
+              // If exhausted mid-gate, just allow move
+              closeQuizDialog();
+              quizGate.active = false;
+              const idx = quizGate.pendingIndex;
+
+              quizGate.pendingIndex = null;
+              quizGate.pendingSymbol = null;
+              quizGate.currentQ = null;
+
+              renderBoard();
+              if(idx != null) commitMove(idx);
+              return;
+            }
+            quizGate.currentQ = nextQ;
+            renderQuizQuestion(nextQ);
+          }, 520);
+        }
+      }
+
+      closeQuizBtn.addEventListener("click", () => {
+        // Close is allowed, but move remains blocked until they answer correctly
+        closeQuizDialog();
+      });
+      quizCloseBtn.addEventListener("click", () => closeQuizDialog());
+
+      // If user closes quiz and tries to move again, it will reopen with a new question (since we consume per attempt)
+      quizDlg.addEventListener("close", () => {
+        // keep gate active if still pending; board remains disabled until correct or until they attempt again
+        renderBoard();
+      });
+
+      // ---------- AI (Perfect-play minimax with handicaps) ----------
+      function queueAIMove(){
+        window.setTimeout(() => {
+          if(state.gameOver) return;
+          const move = chooseAIMove();
+          if(move == null) return;
+
+          placeMark(move, state.aiSym);
+
+          const result = getWinner(state.board);
+          if(result){
+            endRound(result);
+            return;
+          }
+
+          state.turn = (state.turn === "X") ? "O" : "X";
+          setLive(nextStatusLine());
+        }, 220);
+      }
+
+      function chooseAIMove(){
+        const empties = emptyIndices(state.board);
+        if(empties.length === 0) return null;
+
+        const temperament = state.settings.ai;
+
+        const scored = empties.map(idx => {
+          const b2 = state.board.slice();
+          b2[idx] = state.aiSym;
+          const score = minimax(b2, false, state.aiSym, state.human, 0);
+          return { idx, score };
+        });
+
+        scored.sort((a,b) => b.score - a.score);
+
+        const bestScore = scored[0].score;
+        const bestMoves = scored.filter(m => m.score === bestScore);
+
+        if(temperament === "oracle"){
+          return pickDeterministic(bestMoves).idx;
+        }
+
+        if(temperament === "ranger"){
+          const chance = Math.random();
+          if(chance < 0.78){
+            return pickDeterministic(bestMoves).idx;
+          }
+          const secondTierScore = scored.find(m => m.score < bestScore)?.score;
+          if(secondTierScore == null) return pickDeterministic(bestMoves).idx;
+          const secondTier = scored.filter(m => m.score === secondTierScore);
+          const safe = secondTier.filter(m => isMoveSafeish(m.idx));
+          const pool = safe.length ? safe : secondTier;
+          return pickRandom(pool).idx;
+        }
+
+        const chance = Math.random();
+        if(chance < 0.45){
+          return pickRandom(bestMoves).idx;
+        }
+        const uniqueScores = [...new Set(scored.map(m => m.score))];
+        const tiers = uniqueScores.slice(0, 3);
+        let pool = scored.filter(m => tiers.includes(m.score));
+
+        const safer = pool.filter(m => isMoveSafeish(m.idx));
+        if(safer.length) pool = safer;
+
+        return pickRandom(pool).idx;
+      }
+
+      function pickDeterministic(moves){
+        const pref = [4,0,2,6,8,1,3,5,7];
+        for(const p of pref){
+          const found = moves.find(m => m.idx === p);
+          if(found) return found;
+        }
+        return moves[0];
+      }
+
+      function pickRandom(arr){
+        return arr[Math.floor(Math.random()*arr.length)];
+      }
+
+      function emptyIndices(board){
+        const out = [];
+        for(let i=0;i<9;i++) if(board[i] == null) out.push(i);
+        return out;
+      }
+
+      function isMoveSafeish(idx){
+        const b2 = state.board.slice();
+        b2[idx] = state.aiSym;
+        const empties = emptyIndices(b2);
+        for(const e of empties){
+          const b3 = b2.slice();
+          b3[e] = state.human;
+          const w = getWinner(b3);
+          if(w && w.winner === state.human) return false;
+        }
+        return true;
+      }
+
+      function minimax(board, isMaximizing, aiSym, humanSym, depth){
+        const res = getWinner(board);
+        if(res){
+          if(res.winner === aiSym) return 10 - depth;
+          if(res.winner === humanSym) return depth - 10;
+          return 0;
+        }
+
+        const empties = emptyIndices(board);
+
+        if(isMaximizing){
+          let best = -Infinity;
+          for(const idx of empties){
+            board[idx] = aiSym;
+            const score = minimax(board, false, aiSym, humanSym, depth+1);
+            board[idx] = null;
+            best = Math.max(best, score);
+          }
+          return best;
+        }else{
+          let best = Infinity;
+          for(const idx of empties){
+            board[idx] = humanSym;
+            const score = minimax(board, true, aiSym, humanSym, depth+1);
+            board[idx] = null;
+            best = Math.min(best, score);
+          }
+          return best;
+        }
+      }
+
+      // ---------- Magic Confetti (Canvas particles: spores/petals) ----------
+      let particles = [];
+      let rafId = null;
+      let lastTs = 0;
+
+      function resizeCanvas(){
+        const rect = magicCanvas.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        magicCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        magicCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+      }
+
+      function burstMagic(){
+        resizeCanvas();
+
+        const rect = magicCanvas.getBoundingClientRect();
+        const cx = rect.width/2;
+        const cy = rect.height/2;
+
+        const count = Math.floor(clamp(rect.width * 0.20, 70, 160));
+        particles = [];
+
+        const isMoon = document.body.getAttribute("data-theme") === "moonlit";
+        const c1 = isMoon ? "rgba(174,189,255,0.85)" : "rgba(46,231,168,0.85)";
+        const c2 = isMoon ? "rgba(51,238,199,0.78)" : "rgba(255,191,74,0.78)";
+        const c3 = "rgba(255,255,255,0.55)";
+
+        for(let i=0;i<count;i++){
+          const angle = Math.random()*Math.PI*2;
+          const speed = 60 + Math.random()*180;
+          const vx = Math.cos(angle) * speed;
+          const vy = Math.sin(angle) * speed - (40 + Math.random()*80);
+
+          const kind = Math.random() < 0.55 ? "spore" : "petal";
+          particles.push({
+            x: cx + (Math.random()*24 - 12),
+            y: cy + (Math.random()*24 - 12),
+            vx, vy,
+            r: kind === "spore" ? (1.4 + Math.random()*2.2) : (2.2 + Math.random()*3.2),
+            rot: Math.random()*Math.PI*2,
+            vr: (Math.random()*2 - 1) * 2.4,
+            life: 0,
+            ttl: 1200 + Math.random()*600,
+            kind,
+            color: (i%3===0) ? c1 : (i%3===1 ? c2 : c3),
+            glow: 10 + Math.random()*18
+          });
+        }
+
+        lastTs = performance.now();
+        if(rafId) cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(tick);
+      }
+
+      function tick(ts){
+        const dt = Math.min(40, ts - lastTs);
+        lastTs = ts;
+
+        const rect = magicCanvas.getBoundingClientRect();
+        ctx.clearRect(0,0,rect.width,rect.height);
+
+        const g = 260;
+        const wind = (Math.sin(ts/600) * 18);
+
+        particles = particles.filter(p => p.life < p.ttl);
+
+        for(const p of particles){
+          p.life += dt;
+
+          const t = p.life / 1000;
+          const damp = Math.exp(-t*0.35);
+
+          p.vy += (g * dt/1000) * 0.35;
+          p.vx += (wind * dt/1000) * 0.25;
+
+          p.x += p.vx * dt/1000 * damp;
+          p.y += p.vy * dt/1000 * damp;
+
+          p.rot += p.vr * dt/1000;
+
+          const alpha = Math.max(0, 1 - (p.life / p.ttl));
+          drawParticle(p, alpha);
+        }
+
+        if(particles.length){
+          rafId = requestAnimationFrame(tick);
+        }else{
+          ctx.clearRect(0,0,rect.width,rect.height);
+          rafId = null;
+        }
+      }
+
+      function drawParticle(p, a){
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+
+        ctx.globalAlpha = a;
+
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = p.glow;
+
+        if(p.kind === "spore"){
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(0, 0, p.r, 0, Math.PI*2);
+          ctx.fill();
+        }else{
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.moveTo(0, -p.r);
+          ctx.quadraticCurveTo(p.r, -p.r*0.2, 0, p.r);
+          ctx.quadraticCurveTo(-p.r, -p.r*0.2, 0, -p.r);
+          ctx.fill();
+        }
+
+        ctx.restore();
+      }
+
+      // ---------- Settings / Dialog ----------
+      function openDialog(){
+        themeSel.value = state.settings.theme;
+        glyphSel.value = state.settings.glyphs;
+        modeSel.value = state.settings.mode;
+        firstSel.value = state.settings.first;
+        customizeForm.querySelectorAll('input[name="ai"]').forEach(r => r.checked = (r.value === state.settings.ai));
+
+        if(typeof dlg.showModal === "function"){
+          dlg.showModal();
+        }else{
+          dlg.setAttribute("open","");
+        }
+      }
+
+      function closeDialog(){
+        if(dlg.open) dlg.close();
+        dlg.removeAttribute("open");
+      }
+
+      function applySettingsFromForm(){
+        const fd = new FormData(customizeForm);
+
+        const theme = fd.get("theme");
+        const glyphs = fd.get("glyphs");
+        const mode = fd.get("mode");
+        const first = fd.get("first");
+        const ai = fd.get("ai");
+
+        state.settings.theme = (theme === "moonlit") ? "moonlit" : "sunlit";
+        state.settings.glyphs = glyphSets[glyphs] ? glyphs : "standard";
+        state.settings.mode = (mode === "ai") ? "ai" : "pvp";
+        state.settings.first = (first === "O") ? "O" : "X";
+        state.settings.ai = (ai === "ranger" || ai === "trickster") ? ai : "oracle";
+
+        document.body.setAttribute("data-theme", state.settings.theme);
+
+        renderSubtitle();
+        updateScoresUI();
+
+        resetRound();
+      }
+
+      // ---------- Controls ----------
+      newRoundBtn.addEventListener("click", () => resetRound());
+      resetScoresBtn.addEventListener("click", () => {
+        state.scores = { X: 0, O: 0, D: 0 };
+        updateScoresUI();
+        clearBanner();
+        setLive(nextStatusLine());
+      });
+
+      customizeBtn.addEventListener("click", openDialog);
+      closeDlgBtn.addEventListener("click", closeDialog);
+      cancelBtn.addEventListener("click", closeDialog);
+
+      customizeForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        applySettingsFromForm();
+        closeDialog();
+      });
+
+      dlg.addEventListener("click", (e) => {
+        const rect = dlg.getBoundingClientRect();
+        const isInDialog = (
+          e.clientX >= rect.left && e.clientX <= rect.right &&
+          e.clientY >= rect.top && e.clientY <= rect.bottom
+        );
+        if(!isInDialog){
+          closeDialog();
+        }
+      });
+
+      const ro = new ResizeObserver(() => {
+        if(!prefersReducedMotion()){
+          resizeCanvas();
+        }
+      });
+      ro.observe(document.querySelector(".boardCard"));
+
+      window.addEventListener("resize", () => {
+        if(!prefersReducedMotion()){
+          resizeCanvas();
+        }
+      });
+
+      // ---------- Init ----------
+      function init(){
+        renderSubtitle();
+        updateScoresUI();
+        buildBoard();
+        resetRound();
+
+        window.setTimeout(() => {
+          focusCell(0);
+        }, 50);
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
